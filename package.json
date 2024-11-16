@@ -12,6 +12,7 @@
   "devDependencies": {
     "@skyware/bot": "^0.3.7",
     "axios": "^1.7.7",
+    "keyv-file": "^5.0.3",
     "rapidapi-node-sdk": "^1.1.1"
   },
   "dependencies": {
