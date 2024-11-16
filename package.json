@@ -1,0 +1,20 @@
+{
+  "name": "goalbot-bluesky",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@skyware/bot": "^0.3.7",
+    "axios": "^1.7.7",
+    "rapidapi-node-sdk": "^1.1.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
