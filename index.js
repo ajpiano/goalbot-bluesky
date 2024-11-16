@@ -3,10 +3,22 @@ import 'dotenv/config';
 import axios from 'axios';
 import { RapidApi } from 'rapidapi-node-sdk';
 import Keyv from 'keyv';
-import { KeyvFile } from 'keyv-file';
-//import data from "./testlivefixtures.json" assert { type: "json" };
+import KeyvPostgres from '@keyv/postgres';
+import cron from 'node-cron';
 
-const cache = new Keyv({store: new KeyvFile(), ttl: 60 * 1000, namespace: 'goalbot'});
+//import data from "./testlivefixtures.json" assert { type: "json" };
+const store = new KeyvPostgres({uri: process.env.POSTGRES_URL, table: 'cache'});
+const cache = new Keyv({store: store, ttl: 2 * 60 * 1000, namespace: 'keyv'});
+
+cache.on('error', (err) => {
+    console.error(err);
+});
+
+const bot = new Bot();
+await bot.login({
+	identifier: process.env.BSKY_USERNAME,
+	password: process.env.BSKY_PASSWORD,
+});
 
 const rapidApi = new RapidApi({
     rapidApiHost: process.env.RAPIDAPI_HOST,
@@ -16,44 +28,30 @@ const rapidApi = new RapidApi({
     cache: cache
 });
 
-for await (const [key, value] of cache.iterator()) {
-  console.log(key);
-};
+async function loadActiveFixtures() {
+  console.log(`Loading active fixtures at ${new Date()}`);
+  const options = {
+    method: 'GET',
+    uri: 'fixtures',
+    //params: {team: '1604', next: '1'}
+    params: {live: 'all'}
+  };
+  const data = await rapidApi.call(options);
 
-const options = {
-  method: 'GET',
-  uri: 'fixtures',
-  //params: {team: '1604', next: '1'}
-  params: {live: 'all'}
-};
-const data = await rapidApi.call(options);
+  var aMatch = data.response.response[Math.floor(Math.random() * data.response.response.length)];
 
-const bot = new Bot();
-await bot.login({
-	identifier: process.env.BSKY_USERNAME,
-	password: process.env.BSKY_PASSWORD,
-});
+  const text = `Coming to you live from ${aMatch.fixture.venue.name}, we have ${aMatch.league.name} action in ${aMatch.fixture.venue.city}, it's ${aMatch.teams.home.name} vs ${aMatch.teams.away.name}! It's currently the ${aMatch.fixture.status.elapsed}' of the match with the score ${aMatch.goals.home} - ${aMatch.goals.away}!`;
 
-//var nextMatch = data.response.response[0];
+  console.log(text);
 
-//const text = `Get ready for the big one! It's ${nextMatch.teams.home.name} vs ${nextMatch.teams.away.name} on ${nextMatch.fixture.date} in the ${nextMatch.league.round}! Wowie!`
-
-
-//console.log(data);
-var aMatch = data.response.response[Math.floor(Math.random() * data.response.response.length)];
-
-//console.log(aMatch.fixture);
-const text = `Coming to you live from ${aMatch.fixture.venue.name}, we have ${aMatch.league.name} action in ${aMatch.fixture.venue.city}, it's ${aMatch.teams.home.name} vs ${aMatch.teams.away.name}! It's currently the ${aMatch.fixture.status.elapsed}' of the match with the score ${aMatch.goals.home} - ${aMatch.goals.away}!`;
-
-console.log(text);
-
-
-
-try {
-    const post = await bot.post({ text });
-} catch (error) {
-	console.error(error);
+  try {
+      const post = await bot.post({ text });
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 
-process.exit();
+cron.schedule('*/10 * * * *', () => {
+  loadActiveFixtures();
+});
