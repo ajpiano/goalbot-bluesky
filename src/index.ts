@@ -6,9 +6,12 @@ import Keyv from 'keyv';
 import KeyvPostgres from '@keyv/postgres';
 import cron from 'node-cron';
 
+import supabase from './db.js';
+import { processFeed } from './processLiveFixtures.ts';
+
 //import data from "./testlivefixtures.json" assert { type: "json" };
 const store = new KeyvPostgres({uri: process.env.POSTGRES_URL, table: 'cache'});
-const cache = new Keyv({store: store, ttl: 2 * 60 * 1000, namespace: 'keyv'});
+const cache = new Keyv({store: store, ttl: 1 * 60 * 1000, namespace: 'keyv'});
 
 cache.on('error', (err) => {
     console.error(err);
@@ -38,6 +41,34 @@ async function loadActiveFixtures() {
   };
   const data = await rapidApi.call(options);
 
+  await processFeed(data.response.response);
+  
+  const { data: activeFixtures, error } = await supabase
+    .from('fixtures')
+    .select('status:statuses(elapsed),home_team:teams!fixtures_home_team_id_fkey(name),away_team:teams!fixtures_away_team_id_fkey(name),home_score:scores(ht:halftime_home,ft:fulltime_home,et:extratime_home),away_score:scores(ht:halftime_away,ft:fulltime_away, et:extratime_away)');
+
+  if (error) {
+    console.error('Error fetching fixtures:', error);
+    return;
+  }
+
+  console.log(activeFixtures);
+
+  let summaryText = `There are currently ${activeFixtures.length} matches being played:\n`;
+  activeFixtures.forEach(match => {
+    let homeScore = match.home_score.et ?? match.home_score.ft ?? match.home_score.ht ?? 0;
+    let awayScore = match.away_score.et ?? match.away_score.ft ?? match.away_score.ht ?? 0;
+    summaryText += `${match.home_team.name} ${homeScore} - ${awayScore} ${match.away_team.name} (${match.status.elapsed}')\n`;
+  });
+  console.log(summaryText);
+
+  try {
+    const post = await bot.post({ text: summaryText });
+  } catch (error) {
+    console.error(error);
+  }
+
+  /*
   var aMatch = data.response.response[Math.floor(Math.random() * data.response.response.length)];
 
   const text = `Coming to you live from ${aMatch.fixture.venue.name}, we have ${aMatch.league.name} action in ${aMatch.fixture.venue.city}, it's ${aMatch.teams.home.name} vs ${aMatch.teams.away.name}! It's currently the ${aMatch.fixture.status.elapsed}' of the match with the score ${aMatch.goals.home} - ${aMatch.goals.away}!`;
@@ -49,9 +80,26 @@ async function loadActiveFixtures() {
   } catch (error) {
     console.error(error);
   }
+    */
 }
 
 
-cron.schedule('*/10 * * * *', () => {
+cron.schedule('*/5 * * * *', () => {
   loadActiveFixtures();
 });
+
+
+
+/*
+async function loadCountries() {
+  const countries = await supabase
+    .from('countries')
+    .select('*')
+    .eq('continent', 'Oceania');
+    return countries;
+}
+
+const countries = await loadCountries();
+console.log(countries);
+*/
+//loadActiveFixtures();

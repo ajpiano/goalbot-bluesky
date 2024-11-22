@@ -2,8 +2,9 @@ import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js'
 
 // Create a single supabase client for interacting with your database
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY)
 
+/*
 supabase
   .from('countries')
   .select('*')
@@ -11,3 +12,7 @@ supabase
   .then(response => {
     console.log(response)
   });
+
+*/
+
+export default supabase;
