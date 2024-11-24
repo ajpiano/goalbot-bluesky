@@ -1,3 +1,8 @@
+# Dashboard
+/dashboard/.svelte-kit/
+/dashboard/build/
+/dashboard/package/
+
 # Logs
 logs
 *.log

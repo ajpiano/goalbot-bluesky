@@ -1,32 +1,36 @@
 {
   "name": "goalbot-bluesky",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "A monorepo for goalbot-bluesky and its dashboard",
   "type": "module",
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "start": "npx tsx src/index.ts",
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dashboard:dev": "cd dashboard && npm run dev",
+    "dashboard:build": "cd dashboard && npm run build",
+    "dashboard:preview": "cd dashboard && npm run preview"
   },
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@keyv/postgres": "^2.0.3",
+  "workspaces": [
+    "dashboard"
+  ],
+  "dependencies": {
     "@skyware/bot": "^0.3.7",
-    "@supabase/supabase-js": "^2.46.1",
+    "dotenv": "^16.4.5",
+    "axios": "^1.7.7",
+    "rapidapi-node-sdk": "^1.1.1",
+    "keyv": "^4.5.4",
+    "@keyv/postgres": "^2.0.3",
+    "node-cron": "^3.0.3",
+    "@supabase/supabase-js": "^2.46.1"
+  },
+  "devDependencies": {
     "@types/node": "^22.9.1",
     "@types/node-cron": "^3.0.11",
-    "axios": "^1.7.7",
-    "keyv-file": "^5.0.3",
-    "node-cron": "^3.0.3",
-    "rapidapi-node-sdk": "^1.1.1",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
-  },
-  "dependencies": {
-    "dotenv": "^16.4.5"
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.2"
   }
 }
+

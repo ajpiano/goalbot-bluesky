@@ -36,7 +36,7 @@ async function loadActiveFixtures() {
   const options = {
     method: 'GET',
     uri: 'fixtures',
-    //params: {team: '1604', next: '1'}
+    //params: {next: '10'}
     params: {live: 'all'}
   };
   const data = await rapidApi.call(options);
@@ -62,6 +62,10 @@ async function loadActiveFixtures() {
   });
   console.log(summaryText);
 
+  if (summaryText.length > 300) {
+    summaryText = summaryText.substring(0, 297) + '...';
+  }
+
   try {
     const post = await bot.post({ text: summaryText });
   } catch (error) {
@@ -84,7 +88,7 @@ async function loadActiveFixtures() {
 }
 
 
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('0,15,30,45 * * * *', () => {
   loadActiveFixtures();
 });
 
@@ -102,4 +106,4 @@ async function loadCountries() {
 const countries = await loadCountries();
 console.log(countries);
 */
-//loadActiveFixtures();
+loadActiveFixtures();
