@@ -36,7 +36,7 @@ class LiveFixtureProcessor {
 
   private async insertFixture(item: LiveFixtureResponse['response'][0]) {
     const { fixture, league, teams, goals, score, events } = item;
-    
+
     // Insert league
     const { error: leagueError } = await this.supabase.from('leagues').upsert({
       id: league.id,
