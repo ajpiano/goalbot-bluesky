@@ -1,6 +1,13 @@
+import path from 'path';
+import fs from 'fs/promises';
 import supabase from './db.js';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { LiveFixtureResponse } from './types'; // Adjust the path as necessary
+
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class LiveFixtureProcessor {
   private supabase: SupabaseClient;
@@ -9,14 +16,31 @@ class LiveFixtureProcessor {
     this.supabase = supabase;
   }
 
-  async processFixtures(data: LiveFixtureResponse) {
-    await this.deleteOldFixtures(data);
-    for (const item of data) {
+  public async processFixtures(fixtures: LiveFixtureResponse['response']) {
+    if (fixtures.length === 0) {
+      console.log("No live fixtures found. Loading sample data...");
+      fixtures = await this.loadSampleData();
+    }
+
+    for (const fixture of fixtures) {
       try {
-        await this.insertFixture(item);
+        await this.insertFixture(fixture);
+        console.log(`Processed fixture ${fixture.fixture.id}`);
       } catch (error) {
-        console.error(`Failed to process fixture ${item.fixture.id}:`, error);
+        console.error(`Failed to process fixture ${fixture.fixture.id}:`, error);
       }
+    }
+  }
+  private async loadSampleData(): Promise<LiveFixtureResponse['response']> {
+    try {
+      const sampleDataPath = path.join(__dirname, 'sampleLiveFixtures.json');
+      const rawData = await fs.readFile(sampleDataPath, 'utf-8');
+      const sampleData = JSON.parse(rawData);
+      console.log(`Loaded ${sampleData.length} sample fixtures`);
+      return sampleData;
+    } catch (error) {
+      console.error('Error loading sample data:', error);
+      return [];
     }
   }
 

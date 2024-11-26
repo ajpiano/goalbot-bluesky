@@ -36,13 +36,18 @@ async function loadActiveFixtures() {
   const options = {
     method: 'GET',
     uri: 'fixtures',
-    //params: {next: '10'}
     params: {live: 'all'}
   };
-  const data = await rapidApi.call(options);
+  let data;
+  try {
+    data = await rapidApi.call(options);
+  } catch (error) {
+    console.error('Error fetching live fixtures:', error);
+    data = { response: { response: [] } };  // Empty response if API call fails
+  }
 
   await processFeed(data.response.response);
-  
+
   const { data: activeFixtures, error } = await supabase
     .from('fixtures')
     .select('status:statuses(elapsed),home_team:teams!fixtures_home_team_id_fkey(name),away_team:teams!fixtures_away_team_id_fkey(name),home_score:scores(ht:halftime_home,ft:fulltime_home,et:extratime_home),away_score:scores(ht:halftime_away,ft:fulltime_away, et:extratime_away)');
@@ -67,7 +72,7 @@ async function loadActiveFixtures() {
   }
 
   try {
-    const post = await bot.post({ text: summaryText });
+    //const post = await bot.post({ text: summaryText });
   } catch (error) {
     console.error(error);
   }
@@ -88,7 +93,7 @@ async function loadActiveFixtures() {
 }
 
 
-cron.schedule('0,15,30,45 * * * *', () => {
+cron.schedule('* * * * *', () => {
   loadActiveFixtures();
 });
 

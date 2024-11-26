@@ -1,0 +1,109 @@
+<script lang="ts">
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import { supabase } from '$lib/supabaseClient';
+  import type { Fixture, MatchEvent } from '$lib/types';
+
+  let fixture: Fixture | null = null;
+  let events: MatchEvent[] = [];
+
+  function goBack() {
+    goto('/');
+  }
+
+  onMount(async () => {
+    const matchId = $page.params.id;
+    await fetchMatchDetails(matchId);
+    await fetchMatchEvents(matchId);
+  });
+
+  async function fetchMatchDetails(matchId: string) {
+    const { data, error } = await supabase
+      .from('fixtures')
+      .select(`
+        id,
+        status:statuses(long, short, elapsed),
+        home_team:teams!fixtures_home_team_id_fkey(id, name, logo),
+        away_team:teams!fixtures_away_team_id_fkey(id, name, logo),
+        home_score:scores(ht:halftime_home, ft:fulltime_home, et:extratime_home),
+        away_score:scores(ht:halftime_away, ft:fulltime_away, et:extratime_away),
+        league:leagues(name, country)
+      `)
+      .eq('id', matchId)
+      .single();
+
+    if (error) console.error('Error fetching match details:', error);
+    else fixture = data;
+  }
+
+  async function fetchMatchEvents(matchId: string) {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('fixture_id', matchId)
+      .order('time_elapsed', { ascending: true });
+
+    if (error) console.error('Error fetching match events:', error);
+    else events = data;
+  }
+
+  function getEventIcon(type: string) {
+    switch (type.toLowerCase()) {
+      case 'goal': return '⚽';
+      case 'card': return '🟨';
+      case 'subst': return '🔄';
+      default: return '•';
+    }
+  }
+</script>
+
+<div class="container mx-auto px-4 py-8">
+  <button on:click={goBack} class="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    ← Back to All Matches
+  </button>
+
+  {#if fixture}
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div class="bg-gray-100 p-4">
+        <h1 class="text-2xl font-bold text-center">{fixture.league.name}</h1>
+        <p class="text-center text-gray-600">{fixture.league.country}</p>
+      </div>
+
+      <div class="p-4">
+        <div class="flex justify-between items-center mb-4">
+          <div class="text-center w-1/3">
+            <img src={fixture.home_team.logo} alt={fixture.home_team.name} class="w-16 h-16 mx-auto mb-2" />
+            <h2 class="font-semibold">{fixture.home_team.name}</h2>
+          </div>
+          <div class="text-center w-1/3">
+            <p class="text-3xl font-bold">
+              {fixture.home_score.ft ?? fixture.home_score.ht ?? 0} - {fixture.away_score.ft ?? fixture.away_score.ht ?? 0}
+            </p>
+            <p class="text-sm text-gray-600">{fixture.status.long} ({fixture.status.elapsed}')</p>
+          </div>
+          <div class="text-center w-1/3">
+            <img src={fixture.away_team.logo} alt={fixture.away_team.name} class="w-16 h-16 mx-auto mb-2" />
+            <h2 class="font-semibold">{fixture.away_team.name}</h2>
+          </div>
+        </div>
+
+        <h3 class="text-xl font-semibold mb-2">Match Events</h3>
+        <ul class="space-y-2">
+          {#each events as event}
+            <li class="flex items-center">
+              <span class="mr-2">{getEventIcon(event.type)}</span>
+              <span class="mr-2 font-semibold">{event.time_elapsed}'</span>
+              <span>{event.player_name} ({event.team_id === fixture.home_team.id ? fixture.home_team.name : fixture.away_team.name})</span>
+              {#if event.assist_name}
+                <span class="ml-2 text-gray-600">Assist: {event.assist_name}</span>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      </div>
+    </div>
+  {:else}
+    <p class="text-center text-xl">Loading match details...</p>
+  {/if}
+</div>
