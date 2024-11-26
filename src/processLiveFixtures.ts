@@ -149,19 +149,34 @@ class LiveFixtureProcessor {
   }
 
   private async updateEvents(fixtureId: number, events: any[]) {
-    // Delete all existing events for this fixture
-    const { error: deleteError } = await this.supabase
+    if (!events || events.length === 0) return;
+
+    // Fetch existing events for this fixture
+    const { data: existingEvents, error: fetchError } = await this.supabase
       .from('events')
-      .delete()
+      .select('time_elapsed, team_id, type, detail')
       .eq('fixture_id', fixtureId);
 
-    if (deleteError) throw deleteError;
+    if (fetchError) {
+      console.error('Error fetching existing events:', fetchError);
+      return;
+    }
 
-    // Insert new events
-    if (events && events.length > 0) {
+    // Filter out events that already exist
+    const newEvents = events.filter(event =>
+      !existingEvents?.some(existingEvent =>
+        existingEvent.time_elapsed === event.time.elapsed &&
+        existingEvent.team_id === event.team.id &&
+        existingEvent.type === event.type &&
+        existingEvent.detail === event.detail
+      )
+    );
+
+    // Insert only new events
+    if (newEvents.length > 0) {
       const { error: insertError } = await this.supabase
         .from('events')
-        .insert(events.map(event => ({
+        .insert(newEvents.map(event => ({
           time_elapsed: event.time.elapsed,
           time_extra: event.time.extra,
           team_id: event.team.id,
@@ -173,7 +188,13 @@ class LiveFixtureProcessor {
           fixture_id: fixtureId
         })));
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error inserting new events:', insertError);
+      } else {
+        console.log(`Inserted ${newEvents.length} new events for fixture ${fixtureId}`);
+      }
+    } else {
+      console.log(`No new events to insert for fixture ${fixtureId}`);
     }
   }
 
@@ -196,5 +217,5 @@ const processor = new LiveFixtureProcessor();
 
 // Fetch and process fixtures
 export async function processFeed(feed: LiveFixtureResponse) {
-  await processor.processFixtures(feed)
+  await processor.processFixtures(feed);
 }

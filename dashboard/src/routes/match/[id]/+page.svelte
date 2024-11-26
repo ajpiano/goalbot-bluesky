@@ -56,6 +56,24 @@
       default: return '•';
     }
   }
+
+  function formatSubstitution(event: MatchEvent) {
+    const inPlayer = event.player_name;
+    const outPlayer = event.assist_name; // In substitutions, the 'assist_name' field is used for the player going out
+    return `${inPlayer} in, ${outPlayer} out`;
+  }
+
+  function getTeamLogo(event: MatchEvent): string {
+    return event.team_id === fixture.home_team.id
+      ? fixture.home_team.logo
+      : fixture.away_team.logo;
+  }
+
+  function getTeamName(event: MatchEvent): string {
+    return event.team_id === fixture.home_team.id
+      ? fixture.home_team.name
+      : fixture.away_team.name;
+  }
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -92,11 +110,16 @@
         <ul class="space-y-2">
           {#each events as event}
             <li class="flex items-center">
-              <span class="mr-2">{getEventIcon(event.type)}</span>
               <span class="mr-2 font-semibold">{event.time_elapsed}'</span>
-              <span>{event.player_name} ({event.team_id === fixture.home_team.id ? fixture.home_team.name : fixture.away_team.name})</span>
-              {#if event.assist_name}
-                <span class="ml-2 text-gray-600">Assist: {event.assist_name}</span>
+              <span class="mr-2">{getEventIcon(event.type)}</span>
+              <img src={getTeamLogo(event)} alt={getTeamName(event)} class="w-6 h-6 mr-2 object-contain" />
+              {#if event.type.toLowerCase() === 'subst'}
+                <span>{formatSubstitution(event)}</span>
+              {:else}
+                <span>{event.player_name}</span>
+                {#if event.assist_name && event.type.toLowerCase() === 'goal'}
+                  <span class="ml-2 text-gray-600">Assist: {event.assist_name}</span>
+                {/if}
               {/if}
             </li>
           {/each}
