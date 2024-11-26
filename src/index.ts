@@ -41,13 +41,20 @@ async function loadActiveFixtures() {
   let data;
   try {
     data = await rapidApi.call(options);
+    //console.log("API Response:", JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error fetching live fixtures:', error);
-    data = { response: { response: [] } };  // Empty response if API call fails
+    data = { response: [] };  // Empty response if API call fails
+  }
+
+  if (!data || !data.response) {
+    console.error('Invalid data structure received from API');
+    return;
   }
 
   await processFeed(data.response.response);
 
+  // Rest of the function remains the same
   const { data: activeFixtures, error } = await supabase
     .from('fixtures')
     .select('status:statuses(elapsed),home_team:teams!fixtures_home_team_id_fkey(name),away_team:teams!fixtures_away_team_id_fkey(name),home_score:scores(ht:halftime_home,ft:fulltime_home,et:extratime_home),away_score:scores(ht:halftime_away,ft:fulltime_away, et:extratime_away)');
@@ -56,8 +63,6 @@ async function loadActiveFixtures() {
     console.error('Error fetching fixtures:', error);
     return;
   }
-
-  console.log(activeFixtures);
 
   let summaryText = `There are currently ${activeFixtures.length} matches being played:\n`;
   activeFixtures.forEach(match => {
@@ -72,7 +77,7 @@ async function loadActiveFixtures() {
   }
 
   try {
-    //const post = await bot.post({ text: summaryText });
+    const post = await bot.post({ text: summaryText });
   } catch (error) {
     console.error(error);
   }
