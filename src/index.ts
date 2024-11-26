@@ -13,7 +13,7 @@ import { subscribeToGoals } from './goalDetector';
 
 //import data from "./testlivefixtures.json" assert { type: "json" };
 const store = new KeyvPostgres({uri: process.env.POSTGRES_URL, table: 'cache'});
-const cache = new Keyv({store: store, ttl: 1 * 60 * 1000, namespace: 'keyv'});
+const cache = new Keyv({store: store, ttl: 58 * 1000, namespace: 'keyv'});
 
 cache.on('error', (err) => {
     console.error(err);
@@ -34,6 +34,7 @@ const rapidApi = new RapidApi({
 });
 
 async function loadActiveFixtures() {
+  console.log('<---------------------------------------->')
   console.log(`Loading active fixtures at ${new Date()}`);
   const options = {
     method: 'GET',
@@ -56,10 +57,9 @@ async function loadActiveFixtures() {
 
   await processFeed(data.response.response);
 
-  // Rest of the function remains the same
   const { data: activeFixtures, error } = await supabase
     .from('fixtures')
-    .select('status:statuses(elapsed),home_team:teams!fixtures_home_team_id_fkey(name),away_team:teams!fixtures_away_team_id_fkey(name),home_score:scores(ht:halftime_home,ft:fulltime_home,et:extratime_home),away_score:scores(ht:halftime_away,ft:fulltime_away, et:extratime_away)');
+    .select('status:statuses(elapsed),home_team:teams!fixtures_home_team_id_fkey(name),away_team:teams!fixtures_away_team_id_fkey(name),home_score:scores(current:current_home,ht:halftime_home,ft:fulltime_home,et:extratime_home),away_score:scores(current:current_away,ht:halftime_away,ft:fulltime_away,et:extratime_away)');
 
   if (error) {
     console.error('Error fetching fixtures:', error);
@@ -68,11 +68,11 @@ async function loadActiveFixtures() {
 
   let summaryText = `There are currently ${activeFixtures.length} matches being played:\n`;
   activeFixtures.forEach(match => {
-    let homeScore = match.home_score.et ?? match.home_score.ft ?? match.home_score.ht ?? 0;
-    let awayScore = match.away_score.et ?? match.away_score.ft ?? match.away_score.ht ?? 0;
+    let homeScore = match.home_score.current ?? match.home_score.et ?? match.home_score.ft ?? match.home_score.ht ?? 0;
+    let awayScore = match.away_score.current ?? match.away_score.et ?? match.away_score.ft ?? match.away_score.ht ?? 0;
     summaryText += `${match.home_team.name} ${homeScore} - ${awayScore} ${match.away_team.name} (${match.status.elapsed}')\n`;
   });
-  console.log(summaryText);
+  //console.log(summaryText);
 
   if (summaryText.length > 300) {
     summaryText = summaryText.substring(0, 297) + '...';
@@ -100,15 +100,13 @@ async function loadActiveFixtures() {
 }
 
 
-async function onGoalScored(fixtureId: number, team: string, player: string | null, time: number, assistedBy: string | null) {
+async function onGoalScored(fixtureId: number, team: string, player: string | null, time: number, assistedBy: string | null, homeScore: number, awayScore: number) {
   // Fetch the fixture details to get team names
   const { data: fixture, error } = await supabase
     .from('fixtures')
     .select(`
       home_team:teams!fixtures_home_team_id_fkey(name),
-      away_team:teams!fixtures_away_team_id_fkey(name),
-      home_score:scores(ft:fulltime_home, et:extratime_home),
-      away_score:scores(ft:fulltime_away, et:extratime_away)
+      away_team:teams!fixtures_away_team_id_fkey(name)
     `)
     .eq('id', fixtureId)
     .single();
@@ -118,15 +116,10 @@ async function onGoalScored(fixtureId: number, team: string, player: string | nu
     return;
   }
 
-  // Calculate current score
-  const homeScore = fixture.home_score.et ?? fixture.home_score.ft ?? 0;
-  const awayScore = fixture.away_score.et ?? fixture.away_score.ft ?? 0;
-
   const matchName = `${fixture.home_team.name} ${homeScore} - ${awayScore} ${fixture.away_team.name}`;
   const scoringTeam = team === fixture.home_team.name ? 'Home' : 'Away';
 
   const msg = `Goal scored in ${matchName}! ${scoringTeam} team: ${player || 'Unknown'} (${time}') ${assistedBy ? `Assisted by: ${assistedBy}` : ''}`;
-
 
   try {
     console.log(msg);

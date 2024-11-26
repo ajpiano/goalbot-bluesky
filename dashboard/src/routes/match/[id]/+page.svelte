@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient';
   import type { Fixture, MatchEvent } from '$lib/types';
+  import FootballGameWidget from '$lib/FootballGameWidget.svelte';
 
   let fixture: Fixture | null = null;
   let events: MatchEvent[] = [];
@@ -26,8 +27,8 @@
         status:statuses(long, short, elapsed),
         home_team:teams!fixtures_home_team_id_fkey(id, name, logo),
         away_team:teams!fixtures_away_team_id_fkey(id, name, logo),
-        home_score:scores(ht:halftime_home, ft:fulltime_home, et:extratime_home),
-        away_score:scores(ht:halftime_away, ft:fulltime_away, et:extratime_away),
+        home_score:scores(current:current_home, ht:halftime_home, ft:fulltime_home, et:extratime_home),
+        away_score:scores(current:current_away, ht:halftime_away, ft:fulltime_away, et:extratime_away),
         league:leagues(name, country)
       `)
       .eq('id', matchId)
@@ -74,6 +75,9 @@
       ? fixture.home_team.name
       : fixture.away_team.name;
   }
+
+  $: homeScore = fixture?.home_score.current ?? fixture?.home_score.et ?? fixture?.home_score.ft ?? fixture?.home_score.ht ?? 0;
+  $: awayScore = fixture?.away_score.current ?? fixture?.away_score.et ?? fixture?.away_score.ft ?? fixture?.away_score.ht ?? 0
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -96,7 +100,7 @@
           </div>
           <div class="text-center w-1/3">
             <p class="text-3xl font-bold">
-              {fixture.home_score.ft ?? fixture.home_score.ht ?? 0} - {fixture.away_score.ft ?? fixture.away_score.ht ?? 0}
+              {homeScore} - {awayScore}
             </p>
             <p class="text-sm text-gray-600">{fixture.status.long} ({fixture.status.elapsed}')</p>
           </div>
@@ -105,26 +109,50 @@
             <h2 class="font-semibold">{fixture.away_team.name}</h2>
           </div>
         </div>
-
-        <h3 class="text-xl font-semibold mb-2">Match Events</h3>
-        <ul class="space-y-2">
-          {#each events as event}
-            <li class="flex items-center">
-              <span class="mr-2 font-semibold">{event.time_elapsed}'</span>
-              <span class="mr-2">{getEventIcon(event.type)}</span>
-              <img src={getTeamLogo(event)} alt={getTeamName(event)} class="w-6 h-6 mr-2 object-contain" />
-              {#if event.type.toLowerCase() === 'subst'}
-                <span>{formatSubstitution(event)}</span>
-              {:else}
-                <span>{event.player_name}</span>
-                {#if event.assist_name && event.type.toLowerCase() === 'goal'}
-                  <span class="ml-2 text-gray-600">Assist: {event.assist_name}</span>
-                {/if}
-              {/if}
-            </li>
-          {/each}
-        </ul>
       </div>
+    </div>
+    
+    <div class="mt-8 bg-white shadow-lg rounded-lg overflow-hidden">
+      <h3 class="text-xl font-semibold p-4 bg-gray-100">Match Events</h3>
+      <div class="p-4">
+        {#each events as event}
+          <div class="flex items-center mb-2 {event.team_id === fixture.home_team.id ? 'justify-start' : 'justify-end'}">
+            {#if event.team_id === fixture.home_team.id}
+              <img src={getTeamLogo(event)} alt={getTeamName(event)} class="w-6 h-6 mr-2" />
+              <span class="mr-2">{event.time_elapsed}'</span>
+              <span class="mr-2" aria-hidden="true">{getEventIcon(event.type)}</span>
+              <span>
+                {#if event.type.toLowerCase() === 'subst'}
+                  {formatSubstitution(event)}
+                {:else}
+                  {event.player_name}
+                  {#if event.assist_name}
+                    (Assist: {event.assist_name})
+                  {/if}
+                {/if}
+              </span>
+            {:else}
+              <span>
+                {#if event.type.toLowerCase() === 'subst'}
+                  {formatSubstitution(event)}
+                {:else}
+                  {event.player_name}
+                  {#if event.assist_name}
+                    (Assist: {event.assist_name})
+                  {/if}
+                {/if}
+              </span>
+              <span class="ml-2" aria-hidden="true">{getEventIcon(event.type)}</span>
+              <span class="ml-2">{event.time_elapsed}'</span>
+              <img src={getTeamLogo(event)} alt={getTeamName(event)} class="w-6 h-6 ml-2" />
+            {/if}
+          </div>
+        {/each}
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <FootballGameWidget matchId={$page.params.id} />
     </div>
   {:else}
     <p class="text-center text-xl">Loading match details...</p>

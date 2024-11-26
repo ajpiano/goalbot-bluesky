@@ -1,38 +1,55 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import type { Fixture } from './types';
+  import type { Fixture, MatchEvent } from './types';
 
   export let fixture: Fixture;
+  export let events: MatchEvent[] = [];
 
-  $: homeScore = fixture.home_score.et ?? fixture.home_score.ft ?? fixture.home_score.ht ?? 0;
-  $: awayScore = fixture.away_score.et ?? fixture.away_score.ft ?? fixture.away_score.ht ?? 0;
+  $: homeScore = fixture.home_score.current ?? fixture.home_score.et ?? fixture.home_score.ft ?? fixture.home_score.ht ?? 0;
+  $: awayScore = fixture.away_score.current ?? fixture.away_score.et ?? fixture.away_score.ft ?? fixture.away_score.ht ?? 0;
 
   function handleClick() {
     goto(`/match/${fixture.id}`);
   }
+
+  function getEventIcon(type: string) {
+    switch (type.toLowerCase()) {
+      case 'goal': return '⚽';
+      case 'card': return '🟨';
+      case 'subst': return '🔄';
+      default: return '•';
+    }
+  }
+
+  function formatSubstitution(event: MatchEvent) {
+    const inPlayer = event.player_name;
+    const outPlayer = event.assist_name;
+    return `${inPlayer} in, ${outPlayer} out`;
+  }
 </script>
 
-<div class="match-card" on:click={handleClick}>
+<button class="match-card" on:click={handleClick} aria-label="View match details for {fixture.home_team.name} vs {fixture.away_team.name}">
   <div class="league-info">
     {fixture.league.name}, {fixture.league.country}
   </div>
   <div class="teams">
     <div class="team home">
-      <img src={fixture.home_team.logo} alt={fixture.home_team.name} class="team-logo" />
+      <img src={fixture.home_team.logo} alt="" class="team-logo" />
       <span class="team-name">{fixture.home_team.name}</span>
     </div>
-    <div class="score">
+    <div class="score" aria-label="Score: {homeScore} to {awayScore}">
       {homeScore} - {awayScore}
     </div>
     <div class="team away">
-      <img src={fixture.away_team.logo} alt={fixture.away_team.name} class="team-logo" />
+      <img src={fixture.away_team.logo} alt="" class="team-logo" />
       <span class="team-name">{fixture.away_team.name}</span>
     </div>
   </div>
   <div class="match-status">
-    {fixture.status.short} {fixture.status.elapsed ?? ''}
+    {fixture.status.long} ({fixture.status.elapsed}')
   </div>
-</div>
+</button>
+
 
 <style>
   .match-card {

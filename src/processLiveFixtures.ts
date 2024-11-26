@@ -30,7 +30,7 @@ class LiveFixtureProcessor {
     for (const fixture of fixtures) {
       try {
         await this.upsertFixture(fixture);
-        console.log(`Processed fixture ${fixture.fixture.id}`);
+        //console.log(`Processed fixture ${fixture.fixture.id}`);
       } catch (error) {
         console.error(`Failed to process fixture ${fixture.fixture.id}:`, error);
       }
@@ -46,7 +46,7 @@ class LiveFixtureProcessor {
     if (error) {
       console.error('Error removing inactive fixtures:', error);
     } else {
-      console.log('Inactive fixtures removed successfully');
+      //console.log('Inactive fixtures removed successfully');
     }
   }
 
@@ -112,18 +112,20 @@ class LiveFixtureProcessor {
 
     // Upsert score
     const { error: scoreError } = await this.supabase
-      .from('scores')
-      .upsert({
-        id: fixture.id,
-        halftime_home: score.halftime.home,
-        halftime_away: score.halftime.away,
-        fulltime_home: score.fulltime.home,
-        fulltime_away: score.fulltime.away,
-        extratime_home: score.extratime.home,
-        extratime_away: score.extratime.away,
-        penalty_home: score.penalty.home,
-        penalty_away: score.penalty.away
-      });
+    .from('scores')
+    .upsert({
+      id: fixture.id,
+      halftime_home: score.halftime.home,
+      halftime_away: score.halftime.away,
+      fulltime_home: score.fulltime.home,
+      fulltime_away: score.fulltime.away,
+      extratime_home: score.extratime.home,
+      extratime_away: score.extratime.away,
+      penalty_home: score.penalty.home,
+      penalty_away: score.penalty.away,
+      current_home: goals.home,
+      current_away: goals.away
+    });
     if (scoreError) throw scoreError;
 
     // Upsert fixture
@@ -194,7 +196,7 @@ class LiveFixtureProcessor {
         console.log(`Inserted ${newEvents.length} new events for fixture ${fixtureId}`);
       }
     } else {
-      console.log(`No new events to insert for fixture ${fixtureId}`);
+      //console.log(`No new events to insert for fixture ${fixtureId}`);
     }
   }
 
