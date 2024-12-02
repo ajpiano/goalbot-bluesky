@@ -17,10 +17,12 @@ class LiveFixtureProcessor {
   }
 
   public async processFixtures(fixtures: LiveFixtureResponse['response']) {
+    /*
     if (fixtures.length === 0) {
       console.log("No live fixtures found. Loading sample data...");
       fixtures = await this.loadSampleData();
     }
+    */
 
     const currentLiveFixtureIds = fixtures.map(f => f.fixture.id);
 

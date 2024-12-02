@@ -101,12 +101,13 @@ async function loadActiveFixtures() {
 
 
 async function onGoalScored(fixtureId: number, team: string, player: string | null, time: number, assistedBy: string | null, homeScore: number, awayScore: number) {
-  // Fetch the fixture details to get team names
+  // Fetch the fixture details to get team names and league
   const { data: fixture, error } = await supabase
     .from('fixtures')
     .select(`
       home_team:teams!fixtures_home_team_id_fkey(name),
-      away_team:teams!fixtures_away_team_id_fkey(name)
+      away_team:teams!fixtures_away_team_id_fkey(name),
+      league:leagues!inner(name)
     `)
     .eq('id', fixtureId)
     .single();
@@ -116,10 +117,12 @@ async function onGoalScored(fixtureId: number, team: string, player: string | nu
     return;
   }
 
-  const matchName = `${fixture.home_team.name} ${homeScore} - ${awayScore} ${fixture.away_team.name}`;
+  const matchName = `${fixture.home_team.name} ${homeScore} - ${awayScore} ${fixture.away_team.name} (${fixture.league.name})`;
   const scoringTeam = team === fixture.home_team.name ? 'Home' : 'Away';
 
   const msg = `Goal scored in ${matchName}! ${scoringTeam} team: ${player || 'Unknown'} (${time}') ${assistedBy ? `Assisted by: ${assistedBy}` : ''}`;
+
+  console.log(`Message length: ${msg.length} characters`);
 
   try {
     console.log(msg);
@@ -129,7 +132,6 @@ async function onGoalScored(fixtureId: number, team: string, player: string | nu
     console.error('Error posting to Bluesky:', error);
   }
 }
-
 
 cron.schedule('* * * * *', () => {
   loadActiveFixtures();
