@@ -1,3 +1,8 @@
+# Turborepo
+.turbo
+build/**
+dist/**
+
 # Dashboard
 /dashboard/.svelte-kit/
 /dashboard/build/

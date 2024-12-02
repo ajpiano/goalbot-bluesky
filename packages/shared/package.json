@@ -1,0 +1,9 @@
+{
+    "name": "@goalbot-bluesky/shared",
+    "version": "1.0.0",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "dependencies": {
+      "@supabase/supabase-js": "^2.46.1"
+    }
+  }
