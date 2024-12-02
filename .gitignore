@@ -4,9 +4,9 @@ build/**
 dist/**
 
 # Dashboard
-/dashboard/.svelte-kit/
-/dashboard/build/
-/dashboard/package/
+/apps/dashboard/.svelte-kit/
+/apps/dashboard/build/
+/apps/dashboard/package/
 
 # Logs
 logs
@@ -51,6 +51,12 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+
+# Ignore package-lock.json in sub-directories
+**/package-lock.json
+# But allow it in the root
+!/package-lock.json
+
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
@@ -138,3 +144,25 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+node_modules
+
+# Output
+.output
+.vercel
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
