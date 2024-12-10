@@ -1,3 +1,7 @@
+import express from 'express';
+import https from 'https';
+import fs from 'fs';
+
 import { Bot } from "@skyware/bot";
 import 'dotenv/config';
 import axios from 'axios';
@@ -137,21 +141,19 @@ async function onGoalScored(fixtureId: number, team: string, player: string | nu
 cron.schedule('* * * * *', () => {
   loadActiveFixtures();
 });
-
-
 // Subscribe to goal events
 const unsubscribe = subscribeToGoals(onGoalScored);
-
-/*
-async function loadCountries() {
-  const countries = await supabase
-    .from('countries')
-    .select('*')
-    .eq('continent', 'Oceania');
-    return countries;
-}
-
-const countries = await loadCountries();
-console.log(countries);
-*/
 loadActiveFixtures();
+
+const app = express();
+const port = process.env.PORT || 3600;
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Bot is running' });
+});
+
+// Start the Express server
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
+});
