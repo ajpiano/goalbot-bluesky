@@ -79,7 +79,7 @@ async function loadActiveFixtures() {
   }
 
   try {
-    const post = await bot.post({ text: summaryText });
+    //const post = await bot.post({ text: summaryText });
   } catch (error) {
     console.error(error);
   }
