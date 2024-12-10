@@ -12,8 +12,9 @@ import { subscribeToGoals } from './goalDetector';
 
 
 //import data from "./testlivefixtures.json" assert { type: "json" };
-const store = new KeyvPostgres({uri: process.env.POSTGRES_URL, table: 'cache'});
-const cache = new Keyv({store: store, ttl: 58 * 1000, namespace: 'keyv'});
+//const store = new KeyvPostgres({uri: process.env.POSTGRES_URL, table: 'cache'});
+//const cache = new Keyv({store: store, ttl: 58 * 1000, namespace: 'keyv'});
+const cache = new Keyv({ttl: 58 * 1000, namespace: 'keyv'});
 
 cache.on('error', (err) => {
     console.error(err);

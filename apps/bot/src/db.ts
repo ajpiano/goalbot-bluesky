@@ -1,18 +1,19 @@
-import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js'
 
-// Create a single supabase client for interacting with your database
-const supabase = createClient(process.env.PUBLIC_SUPABASE_URL, process.env.PUBLIC_SUPABASE_SERVICE_ROLE_KEY)
+const supabaseUrl = process.env.PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
-/*
-supabase
-  .from('countries')
-  .select('*')
-  .limit(5)
-  .then(response => {
-    console.log(response)
-  });
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase credentials')
+}
 
-*/
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  db: {
+    schema: 'public',
+  },
+  auth: {
+    persistSession: false,
+  },
+})
 
-export default supabase;
+export default supabase

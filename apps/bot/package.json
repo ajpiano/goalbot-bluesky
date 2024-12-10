@@ -5,24 +5,27 @@
   "scripts": {
     "start": "npx tsx src/index.ts",
     "dev": "npx tsx watch src/index.ts",
-    "build": "tsc"
+    "build": "tsx"
   },
   "dependencies": {
-    "@skyware/bot": "^0.3.7",
-    "dotenv": "^16.4.5",
-    "axios": "^1.7.7",
-    "rapidapi-node-sdk": "^1.1.1",
-    "keyv": "^4.5.4",
     "@keyv/postgres": "^2.0.3",
+    "@skyware/bot": "^0.3.7",
+    "@supabase/supabase-js": "^2.46.1",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "keyv": "^4.5.4",
+    "keyv-file": "^5.0.3",
     "node-cron": "^3.0.3",
-    "@supabase/supabase-js": "^2.46.1"
+    "pg": "^8.13.1",
+    "rapidapi-node-sdk": "^1.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.9.1",
     "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.11.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.6.3",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
   }
 }

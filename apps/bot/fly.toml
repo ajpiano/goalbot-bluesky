@@ -1,0 +1,14 @@
+# fly.toml app configuration file generated for goalbot-bluesky-bot on 2024-12-09T23:18:15-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'goalbot-bluesky-bot'
+primary_region = 'ewr'
+
+[build]
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
