@@ -4,15 +4,18 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"start": "cross-env PORT=3600 node build"
 	},
 	"devDependencies": {
+		"@flydotio/dockerfile": "^0.5.9",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.9.0",
-		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"@sveltejs/vite-plugin-svelte": "^4.0.2",
 		"@tailwindcss/typography": "^0.5.15",
 		"@types/node": "^22.9.3",
 		"autoprefixer": "^10.4.20",
+		"cross-env": "^7.0.3",
 		"postcss": "^8.4.49",
 		"svelte": "^5",
 		"svelte-check": "^3.4.3",
@@ -23,6 +26,7 @@
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.46.1",
+		"@sveltejs/adapter-node": "^5.2.9",
 		"globe.gl": "^2.34.0",
 		"pixi.js": "^8.5.2"
 	},
